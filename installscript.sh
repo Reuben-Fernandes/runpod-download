@@ -4,7 +4,7 @@
 # Includes: Qwen 3 TTS | Z Image Turbo | LTX Video 2.3 GGUF
 #
 # Usage (one-liner):
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/comfyui_full_setup.sh | HF_TOKEN=hf_yourtoken bash
+#   curl -fsSL https://raw.githubusercontent.com/Reuben-Fernandes/runpod-download/main/installscript.sh | HF_TOKEN=hf_yourtoken bash
 #
 # HF_TOKEN is passed as an environment variable — never hardcoded.
 #
@@ -22,7 +22,7 @@ if [[ -z "$HF_TOKEN" ]]; then
     echo "ERROR: No HuggingFace token found."
     echo "       Run with: HF_TOKEN=hf_yourtoken bash setup.sh"
     echo "       Or as a one-liner:"
-    echo "       curl -fsSL https://raw.githubusercontent.com/YOU/REPO/main/comfyui_full_setup.sh | HF_TOKEN=hf_yourtoken bash"
+    echo "       curl -fsSL https://raw.githubusercontent.com/Reuben-Fernandes/runpod-download/main/installscript.sh | HF_TOKEN=hf_yourtoken bash"
     exit 1
 fi
 echo "✓ Token detected"
@@ -66,7 +66,7 @@ echo "✓ Phase 1 complete"
 
 
 # ════════════════════════════════════════════════════════════════
-#  PHASE 2: Custom Nodes (deduplicated across all three scripts)
+#  PHASE 2: Custom Nodes
 # ════════════════════════════════════════════════════════════════
 echo ""
 echo "========================================"
@@ -76,20 +76,13 @@ echo "========================================"
 mkdir -p "$NODES_DIR"
 
 NODES=(
-    # Shared / general
     "https://github.com/city96/ComfyUI-GGUF"
     "https://github.com/rgthree/rgthree-comfy"
     "https://github.com/chrisgoringe/cg-use-everywhere"
     "https://github.com/kijai/ComfyUI-KJNodes"
-
-    # Qwen TTS
     "https://github.com/LAOGOU-666/ComfyUI-LG_SamplingUtils"
     "https://github.com/flybirdxx/ComfyUI-Qwen-TTS"
-
-    # Z Image Turbo
     "https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler"
-
-    # LTX 2.3
     "https://github.com/yolain/ComfyUI-Easy-Use"
     "https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite"
     "https://github.com/olduvai-jp/ComfyUI-S3-IO"
@@ -116,6 +109,7 @@ echo "✓ Phase 2 complete"
 
 # ════════════════════════════════════════════════════════════════
 #  PHASE 3: Download Models
+#  All models served from ReubenF10/ComfyUI-Models
 # ════════════════════════════════════════════════════════════════
 echo ""
 echo "========================================"
@@ -139,10 +133,6 @@ download_hf() {
         echo "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         return 0
     fi
-
-    echo "    From: $repo_id"
-    echo "    To:   $full_dest"
-    echo "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     mkdir -p "$full_dest"
     local temp_dir
@@ -174,70 +164,75 @@ EOF
     return $result
 }
 
+MIRROR="ReubenF10/ComfyUI-Models"
 FAILED=0
 
-# ── Qwen TTS Models ─────────────────────────────────────────────
+# ── Qwen TTS ─────────────────────────────────────────────────────
 echo ""
 echo "  ── Qwen 3 TTS ──"
 mkdir -p "$MODELS_DIR/qwen-tts/Qwen"
 
-download_hf "Qwen/Qwen3-TTS-Tokenizer-12Hz" "model.safetensors" \
+download_hf "$MIRROR" \
+    "qwen-tts/Qwen/Qwen3-TTS-Tokenizer-12Hz/model.safetensors" \
     "qwen-tts/Qwen/Qwen3-TTS-Tokenizer-12Hz" "model.safetensors" || FAILED=1
 
-download_hf "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign" "model.safetensors" \
+download_hf "$MIRROR" \
+    "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign/model.safetensors" \
     "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign" "model.safetensors" || FAILED=1
 
-download_hf "Qwen/Qwen3-TTS-12Hz-1.7B-Base" "model.safetensors" \
+download_hf "$MIRROR" \
+    "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-Base/model.safetensors" \
     "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-Base" "model.safetensors" || FAILED=1
 
-download_hf "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" "model.safetensors" \
+download_hf "$MIRROR" \
+    "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice/model.safetensors" \
     "qwen-tts/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" "model.safetensors" || FAILED=1
 
-# ── Z Image Turbo Models ─────────────────────────────────────────
+# ── Z Image Turbo ─────────────────────────────────────────────────
 echo ""
 echo "  ── Z Image Turbo ──"
 
-download_hf "Comfy-Org/z_image_turbo" \
-    "split_files/diffusion_models/z_image_turbo_bf16.safetensors" \
+download_hf "$MIRROR" \
+    "diffusion_models/z_image_turbo_bf16.safetensors" \
     "diffusion_models" "z_image_turbo_bf16.safetensors" || FAILED=1
 
-download_hf "Comfy-Org/z_image_turbo" \
-    "split_files/text_encoders/qwen_3_4b.safetensors" \
+download_hf "$MIRROR" \
+    "text_encoders/qwen_3_4b.safetensors" \
     "text_encoders" "qwen_3_4b.safetensors" || FAILED=1
 
-download_hf "Comfy-Org/z_image_turbo" \
-    "split_files/vae/ae.safetensors" \
+download_hf "$MIRROR" \
+    "vae/ae.safetensors" \
     "vae" "ae.safetensors" || FAILED=1
 
-# ── LTX 2.3 Models ──────────────────────────────────────────────
+# ── LTX 2.3 ──────────────────────────────────────────────────────
 echo ""
 echo "  ── LTX Video 2.3 ──"
 
-download_hf "QuantStack/LTX-2.3-GGUF" \
-    "LTX-2.3-distilled/LTX-2.3-distilled-Q4_K_S.gguf" \
+download_hf "$MIRROR" \
+    "diffusion_models/LTX-2.3-distilled-Q4_K_S.gguf" \
     "diffusion_models" "LTX-2.3-distilled-Q4_K_S.gguf" || FAILED=1
 
-download_hf "unsloth/gemma-3-12b-it-GGUF" \
-    "gemma-3-12b-it-Q2_K.gguf" \
+download_hf "$MIRROR" \
+    "text_encoders/gemma-3-12b-it-Q2_K.gguf" \
     "text_encoders" "gemma-3-12b-it-Q2_K.gguf" || FAILED=1
 
-download_hf "Kijai/LTX2.3_comfy" \
+download_hf "$MIRROR" \
     "text_encoders/ltx-2.3_text_projection_bf16.safetensors" \
     "text_encoders" "ltx-2.3_text_projection_bf16.safetensors" || FAILED=1
 
-download_hf "Lightricks/LTX-2.3" \
-    "ltx-2.3-spatial-upscaler-x2-1.0.safetensors" \
+download_hf "$MIRROR" \
+    "latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.0.safetensors" \
     "latent_upscale_models" "ltx-2.3-spatial-upscaler-x2-1.0.safetensors" || FAILED=1
 
-download_hf "Kijai/LTX2.3_comfy" \
+download_hf "$MIRROR" \
     "vae/LTX23_video_vae_bf16.safetensors" \
     "vae" "LTX23_video_vae_bf16.safetensors" || FAILED=1
 
-download_hf "Kijai/LTX2.3_comfy" \
+download_hf "$MIRROR" \
     "vae/LTX23_audio_vae_bf16.safetensors" \
     "vae" "LTX23_audio_vae_bf16.safetensors" || FAILED=1
 
-download_hf "Kijai/LTX2.3_comfy" \
+download_hf "$MIRROR" \
     "vae/taeltx2_3.safetensors" \
     "vae" "taeltx2_3.safetensors" || FAILED=1
 
@@ -250,7 +245,7 @@ fi
 
 
 # ════════════════════════════════════════════════════════════════
-#  PHASE 4: SageAttention (optional speed boost)
+#  PHASE 4: SageAttention
 # ════════════════════════════════════════════════════════════════
 echo ""
 echo "========================================"
@@ -272,7 +267,8 @@ echo "########################################"
 echo ""
 echo "ComfyUI Location:  $COMFYUI_DIR"
 echo ""
-echo "Model Locations:"
+echo "Models from: huggingface.co/ReubenF10/ComfyUI-Models"
+echo ""
 echo "  qwen-tts/Qwen/"
 echo "    • Qwen3-TTS-Tokenizer-12Hz/"
 echo "    • Qwen3-TTS-12Hz-1.7B-VoiceDesign/"
