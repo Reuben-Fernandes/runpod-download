@@ -134,27 +134,40 @@ echo "========================================"
 echo "  PHASE 4: SageAttention"
 echo "========================================"
 
-SA_DIR="/workspace/SageAttention"
+SA_WHEEL="sageattention-2.2.0-cp312-cp312-linux_x86_64.whl"
+SA_WHEEL_PATH="/tmp/$SA_WHEEL"
 
 if python3 -c "import sageattention; from sageattention import sageattn_qk_int8_pv_fp16_cuda" 2>/dev/null; then
     echo "✓ SageAttention 2.x already installed"
 else
-    echo "  → Building from source (this will take a few minutes)..."
-    $PIP_CMD install torch packaging ninja --break-system-packages --quiet
+    echo "  → Downloading precompiled wheel from Kijai/PrecompiledWheels..."
 
-    if [[ -d "$SA_DIR" ]]; then
-        echo "  → Repo exists, pulling latest..."
-        (cd "$SA_DIR" && git pull)
+    $PYTHON_CMD << EOF
+import os, sys
+from huggingface_hub import hf_hub_download
+try:
+    path = hf_hub_download(
+        repo_id="Kijai/PrecompiledWheels",
+        filename="$SA_WHEEL",
+        token=os.environ["HF_TOKEN"],
+        local_dir="/tmp",
+        local_dir_use_symlinks=False,
+        force_download=False
+    )
+    print(f"  ✓ Downloaded to {path}")
+    sys.exit(0)
+except Exception as e:
+    print(f"  ✗ Download failed: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+
+    if [[ $? -eq 0 ]]; then
+        $PIP_CMD install "$SA_WHEEL_PATH" --break-system-packages \
+            && echo "✓ SageAttention 2.2.0 installed" \
+            || echo "⚠️  SageAttention install failed — continuing without it"
     else
-        git clone https://github.com/thu-ml/SageAttention.git "$SA_DIR"
+        echo "⚠️  SageAttention download failed — continuing without it"
     fi
-
-    cd "$SA_DIR"
-    $PIP_CMD install -e . --no-build-isolation --break-system-packages \
-        && echo "✓ SageAttention 2.x installed" \
-        || echo "⚠️  SageAttention build failed — continuing without it"
-
-    cd /workspace
 fi
 
 echo ""
