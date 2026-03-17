@@ -133,8 +133,29 @@ echo ""
 echo "========================================"
 echo "  PHASE 4: SageAttention"
 echo "========================================"
-$PIP_CMD install sageattention --break-system-packages 2>/dev/null \
-    && echo "✓ Installed" || echo "⚠️  Skipped (optional)"
+
+SA_DIR="/workspace/SageAttention"
+
+if python3 -c "import sageattention; from sageattention import sageattn_qk_int8_pv_fp16_cuda" 2>/dev/null; then
+    echo "✓ SageAttention 2.x already installed"
+else
+    echo "  → Building from source (this will take a few minutes)..."
+    $PIP_CMD install torch packaging ninja --break-system-packages --quiet
+
+    if [[ -d "$SA_DIR" ]]; then
+        echo "  → Repo exists, pulling latest..."
+        (cd "$SA_DIR" && git pull)
+    else
+        git clone https://github.com/thu-ml/SageAttention.git "$SA_DIR"
+    fi
+
+    cd "$SA_DIR"
+    $PIP_CMD install -e . --no-build-isolation --break-system-packages \
+        && echo "✓ SageAttention 2.x installed" \
+        || echo "⚠️  SageAttention build failed — continuing without it"
+
+    cd /workspace
+fi
 
 echo ""
 echo "########################################"
@@ -147,4 +168,8 @@ echo "  CFG:        1.0-1.5"
 echo "  Resolution: divisible by 16 (e.g. 832x480, 1280x720)"
 echo "  Frames:     (N-1) divisible by 4 (e.g. 49, 81, 121)"
 echo "  VRAM:       ~16-18GB (GGUF Q4)"
+echo ""
+echo "SageAttention Node Settings (Kijai):"
+echo "  Mode:       sageattn_qk_int8_pv_fp16_cuda"
+echo "  Allow compile: true"
 echo ""
