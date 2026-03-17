@@ -1,12 +1,13 @@
 #!/bin/bash
 #
 # Wan 2.2 I2V Setup for RunPod
+# Base image: runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/Reuben-Fernandes/runpod-download/main/wan22.sh | HF_TOKEN=hf_yourtoken bash
 #
 
-COMFYUI_DIR=/workspace/runpod-slim/ComfyUI
+COMFYUI_DIR=/workspace/ComfyUI
 VENV_PYTHON="$COMFYUI_DIR/.venv/bin/python"
 VENV_PIP="$COMFYUI_DIR/.venv/bin/pip"
 
@@ -23,42 +24,36 @@ if [[ -z "$HF_TOKEN" ]]; then
 fi
 echo "✓ Token detected"
 
-if [[ ! -d "$COMFYUI_DIR" ]]; then
-    echo "ERROR: ComfyUI not found at $COMFYUI_DIR"
-    exit 1
-fi
-echo "✓ ComfyUI found at: $COMFYUI_DIR"
-
 MODELS_DIR="$COMFYUI_DIR/models"
 NODES_DIR="$COMFYUI_DIR/custom_nodes"
 MIRROR="ReubenF10/ComfyUI-Models"
 export HF_TOKEN
 
-# ── Phase 0: System Libraries ────────────────────────────────────
+# ── Phase 0: ComfyUI ─────────────────────────────────────────────
 echo ""
 echo "========================================"
-echo "  PHASE 0: System Libraries"
+echo "  PHASE 0: ComfyUI"
 echo "========================================"
 
-if strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 2>/dev/null | grep -q "GLIBCXX_3.4.32"; then
-    echo "✓ libstdc++ already up to date"
+if [[ -d "$COMFYUI_DIR" ]]; then
+    echo "  → ComfyUI exists, pulling latest..."
+    (cd "$COMFYUI_DIR" && git pull)
 else
-    echo "  → Upgrading libstdc++ via toolchain PPA..."
-    echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu jammy main" \
-        > /etc/apt/sources.list.d/toolchain.list
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1E9377A2BA9EF27F 2>/dev/null
-    apt-get update -qq
-    apt-get install -y gcc-13 g++-13 libstdc++6 2>/dev/null \
-        && echo "✓ libstdc++ upgraded" \
-        || echo "⚠️  libstdc++ upgrade failed — SageAttention may not work"
+    echo "  → Cloning ComfyUI..."
+    git clone https://github.com/comfyanonymous/ComfyUI.git "$COMFYUI_DIR"
 fi
+
+echo "  → Setting up venv..."
+python3 -m venv "$COMFYUI_DIR/.venv"
+$VENV_PIP install --upgrade pip --quiet
+$VENV_PIP install -r "$COMFYUI_DIR/requirements.txt" --quiet
+echo "✓ ComfyUI ready"
 
 # ── Phase 1: Dependencies ────────────────────────────────────────
 echo ""
 echo "========================================"
 echo "  PHASE 1: Dependencies"
 echo "========================================"
-$VENV_PIP install --upgrade pip --quiet
 $VENV_PIP install "huggingface_hub[cli]" hf_transfer --quiet
 export HF_HUB_ENABLE_HF_TRANSFER=1
 echo "✓ Done"
@@ -71,10 +66,12 @@ echo "========================================"
 mkdir -p "$NODES_DIR"
 
 for repo in \
+    "https://github.com/ltdrdata/ComfyUI-Manager" \
     "https://github.com/city96/ComfyUI-GGUF" \
     "https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite" \
     "https://github.com/Fannovel16/ComfyUI-Frame-Interpolation" \
-    "https://github.com/kijai/ComfyUI-WanVideoWrapper"
+    "https://github.com/kijai/ComfyUI-WanVideoWrapper" \
+    "https://github.com/kijai/ComfyUI-KJNodes"
 do
     dir="${repo##*/}"
     path="$NODES_DIR/$dir"
@@ -189,10 +186,22 @@ EOF
     fi
 fi
 
+# ── Phase 5: Start ComfyUI ───────────────────────────────────────
+echo ""
+echo "========================================"
+echo "  PHASE 5: Start ComfyUI"
+echo "========================================"
+echo "  → Launching ComfyUI on port 8188..."
+nohup $VENV_PYTHON "$COMFYUI_DIR/main.py" --listen 0.0.0.0 --port 8188 \
+    > /workspace/comfyui.log 2>&1 &
+echo "✓ ComfyUI started (logs at /workspace/comfyui.log)"
+
 echo ""
 echo "########################################"
 echo "#      Wan 2.2 Setup Complete         #"
 echo "########################################"
+echo ""
+echo "Access ComfyUI at: http://localhost:8188"
 echo ""
 echo "Recommended Settings:"
 echo "  Steps:      4-8 (with Lightning LoRA)"
