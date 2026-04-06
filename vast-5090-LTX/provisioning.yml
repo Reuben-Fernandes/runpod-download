@@ -1,0 +1,27 @@
+version: 1
+
+pip_packages:
+  - packages:
+      - https://huggingface.co/ReubenF10/ComfyUI-Models/resolve/main/wheels/ltx/5090/sageattn3-1.0.0-cp312-cp312-linux_x86_64.whl
+
+git_repos:
+  - url: https://github.com/Lightricks/ComfyUI-LTXVideo
+    dest: /workspace/ComfyUI/custom_nodes/ComfyUI-LTXVideo
+  - url: https://github.com/kijai/ComfyUI-KJNodes
+    dest: /workspace/ComfyUI/custom_nodes/ComfyUI-KJNodes
+  - url: https://github.com/rgthree/rgthree-comfy
+    dest: /workspace/ComfyUI/custom_nodes/rgthree-comfy
+  - url: https://github.com/city96/ComfyUI-GGUF
+    dest: /workspace/ComfyUI/custom_nodes/ComfyUI-GGUF
+  - url: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
+    dest: /workspace/ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite
+  - url: https://github.com/yolain/ComfyUI-Easy-Use
+    dest: /workspace/ComfyUI/custom_nodes/ComfyUI-Easy-Use
+
+downloads:
+  - url: https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors
+    dest: /workspace/ComfyUI/models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors
+  - url: https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384.safetensors
+    dest: /workspace/ComfyUI/models/loras/ltx-2.3-22b-distilled-lora-384.safetensors
+  - url: https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors
+    dest: /workspace/ComfyUI/models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors
