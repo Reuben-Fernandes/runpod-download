@@ -35,6 +35,9 @@ git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite || true
 echo "   Cloning ComfyUI-Easy-Use..."
 git clone https://github.com/yolain/ComfyUI-Easy-Use || true
 
+echo "   Cloning ComfyMath..."
+git clone https://github.com/evanspearman/ComfyMath || true
+
 echo " → Installing node requirements..."
 for dir in /workspace/ComfyUI/custom_nodes/*/; do
     if [ -f "$dir/requirements.txt" ]; then
@@ -78,5 +81,14 @@ PYEOF
 # ── Restart ComfyUI ──────────────────────────────────────────────
 echo " → Restarting ComfyUI..."
 supervisorctl restart comfyui
+
+# ── Print access details ─────────────────────────────────────────
+echo ""
+echo "########################################"
+echo "  ComfyUI Access Details"
+echo "  Token: $(echo $OPEN_BUTTON_TOKEN)"
+echo "  Direct: http://$(curl -s ifconfig.me):$(echo $VAST_TCP_PORT_8188)"
+echo "########################################"
+echo ""
 
 echo "✓ Provisioning complete"
